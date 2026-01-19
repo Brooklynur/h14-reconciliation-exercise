@@ -15,7 +15,6 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.DependsOn;
 import org.springframework.context.annotation.PropertySource;
 import org.springframework.core.env.Environment;
 import org.springframework.core.io.support.PathMatchingResourcePatternResolver;
@@ -40,8 +39,8 @@ public class DbConfig {
 	@Bean(name = "h14DataSource")
 	DataSource dataSource() {
 		BasicDataSource dataSource = new BasicDataSource();
-		dataSource.setDriverClassName(env.getProperty("spring.datasource.url"));
-		dataSource.setUrl(env.getProperty("spring.datasource.driverClassName"));
+		dataSource.setDriverClassName(env.getProperty("spring.datasource.driverClassName"));
+		dataSource.setUrl(env.getProperty("spring.datasource.url"));
 		return dataSource;
 	}
 	
@@ -65,18 +64,16 @@ public class DbConfig {
 		return new SqlSessionTemplate(sqlSessionFactory);
 	}
 	
-	@Bean(name = "h14SqlSessionFactory")
+	@Bean(name = "h14DataSourceTransactionManager")
 	DataSourceTransactionManager transactionManager(@Qualifier("h14DataSource") DataSource h14DataSource) {
 		return new DataSourceTransactionManager(h14DataSource);
 	}
 	
-	@Bean
-	@DependsOn("h14DataSource")
-	SpringLiquibase liquibase(DataSource clvdbDataSource) {
+	@Bean("h14Liquibase")
+	SpringLiquibase liquibase(@Qualifier("h14DataSource") DataSource clvdbDataSource) {
 		log.info("loading h14db");
-	
-	SpringLiquibase liquibase = new SpringLiquibase();
-	liquibase.setChangeLog("classpath:liquibase/h14Liquibase-changeLog.xml");
+		SpringLiquibase liquibase = new SpringLiquibase();
+		liquibase.setChangeLog("classpath:liquibase/h14Liquibase-changeLog.xml");
 		liquibase.setDataSource(clvdbDataSource);
 		return liquibase;
 	}
