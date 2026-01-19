@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Configuration name="preventivo-dinamico-to-sd" status="info" strict="true">
+  
+  <!-- Dichiarazione di alias per valori usati all'interno di questo file -->
+  <Properties>
+    <Property name="basePath">/var/log/applogs/riconciliazione-titoli</Property>
+    <Property name="filename">riconciliazione-titoli</Property>
+    <Property name="pattern">%d{yyyy-MM-dd HH:mm:ss.SSS} %notEmpty{%X{parentThreadName} }%t %highlight{[%level{length=3}]} %c{1.1.1.*.} - %m%n</Property>
+  </Properties>
+  
+  <Appenders>
+    <!-- Configurazione del file appender con rotazione -->
+    <Appender type="RollingFile" name="fileAppender" fileName="${basePath}/${filename}.log" filePattern="${basePath}/${filename}_%d{yyyy.MM.dd}.log.gz">
+      <!-- Configurazione delle politiche di rotazione a 7 giorni per il file appender -->
+      <Policies>
+        <TimeBasedTriggeringPolicy interval="1" modulate="true" />
+      </Policies>
+      <!-- Cancella i file più vecchi dell'età specificata [d=giorni] -->
+      <DefaultRolloverStrategy>
+        <Delete basePath="${basePath}/${filename}/" maxDepth="1">
+          <IfLastModified age="30d" />
+        </Delete>
+      </DefaultRolloverStrategy>
+      <Layout type="PatternLayout" pattern="${pattern}" />
+    </Appender>
+  </Appenders>
+  
+  <Loggers>
+    
+    <Logger name="org.apache" level="warn" additivity="false">
+      <AppenderRef ref="fileAppender" level="warn"/>
+    </Logger>
+      
+    <Logger name="org.hibernate" level="warn" additivity="false">
+      <AppenderRef ref="fileAppender" level="warn"/>
+    </Logger>
+    
+    <Logger name="org.springframework" level="INFO" additivity="false">
+      <AppenderRef ref="fileAppender" level="INFO" />
+    </Logger>
+        
+    <Logger name="com.msa.preventivodinamicotosd.mapper" level="DEBUG" additivity="false">
+      <AppenderRef ref="fileAppender" level="DEBUG"/>
+    </Logger>
+      
+    <!-- GENERIC CONFIGURATION -->
+    
+    <Logger name="org.springframework" level="warn" additivity="false">
+      <AppenderRef ref="fileAppender" level="warn"/>
+    </Logger>
+    
+    <Logger name="it.selectsrl" level="info" additivity="false">
+      <AppenderRef ref="fileAppender" level="info"/>
+    </Logger>
+    
+    <Logger name="com.msa" level="info" additivity="false">
+      <AppenderRef ref="fileAppender" level="info"/>
+    </Logger>
+    
+    <Logger name="liquibase" level="INFO" additivity="false">
+      <AppenderRef ref="fileAppender" level="INFO" />
+    </Logger>
+    
+    <!-- classe che stampa il banner -->
+    <Logger name="org.springframework.boot.SpringApplication" level="INFO" additivity="false">
+      <AppenderRef ref="fileAppender" level="INFO" />
+    </Logger>
+    
+    <!-- Configurazione del livello del root logger per i log di tutti i package non specificati sopra -->
+    <Root level="ERROR" additivity="false">
+      <AppenderRef ref="fileAppender" level="ERROR"/>
+    </Root>
+  </Loggers>
+</Configuration>

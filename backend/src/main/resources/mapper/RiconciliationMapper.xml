@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="riconciliazionetitoli.mapper.RiconciliationMapper">
+
+	<select id="getReconciliationReport" resultType="riconciliazionetitoli.response.ReconciliationResponse">
+		SELECT 
+          /* RiconciliationMapper.getReconciliationReport */
+            s.isin, 
+            s.name as securityName,
+            ip.portfolio_id as portfolioId,
+            ip.quantity as internalQty,
+            ip.market_price as internalPrice,
+            COALESCE(bp.total_bank_qty, 0) as bankQty,
+            (ip.quantity - COALESCE(bp.total_bank_qty, 0)) as diffQty,
+            rn.is_validated as manuallyValidated,
+            rn.note as notes
+        FROM internal_position ip
+        JOIN security s ON ip.isin = s.isin
+        LEFT JOIN (
+            -- Sottoquery per aggregare più banche (Step A)
+            SELECT isin, SUM(quantity) as total_bank_qty 
+            FROM bank_position 
+            GROUP BY isin
+        ) bp ON ip.isin = bp.isin
+        LEFT JOIN reconciliation_notes rn ON ip.isin = rn.isin AND ip.portfolio_id = rn.portfolio_id
+	</select>
+
+</mapper>

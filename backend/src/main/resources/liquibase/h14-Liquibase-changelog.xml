@@ -1,0 +1,122 @@
+<databaseChangeLog
+	xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+   http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.4.xsd">
+
+    <changeSet id="#1 - Creazione tabelle" author="lsoldi">
+    	<sql>
+    		--- 1. Anagrafica Titoli (Per evitare ridondanza nomi)
+			CREATE TABLE IF NOT EXISTS security (
+			    isin VARCHAR(12) PRIMARY KEY,
+			    name VARCHAR(255) NOT NULL,
+			    currency VARCHAR(3) DEFAULT 'EUR'
+			);
+			
+			--- 2. Portafogli Interni (Contesto H14)
+			CREATE TABLE IF NOT EXISTS portfolio (
+			    id VARCHAR(50) PRIMARY KEY,
+			    description VARCHAR(255)
+			);
+			
+			--- 3. Posizioni Interne (Da Swarm)
+			--- Gestisce lo Step B: una posizione può appartenere a un portafoglio specifico
+			CREATE TABLE IF NOT EXISTS internal_position (
+			    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+			    isin VARCHAR(12) NOT NULL,
+			    portfolio_id VARCHAR(50) NOT NULL,
+			    quantity DECIMAL(19, 4) NOT NULL,
+			    market_price DECIMAL(19, 4), --- Step D: Prezzi
+			    last_update TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+			    FOREIGN KEY (isin) REFERENCES security(isin),
+			    FOREIGN KEY (portfolio_id) REFERENCES portfolio(id)
+			);
+			
+			--- 4. Posizioni Bancarie (Dai Feed)
+			--- Gestisce lo Step A: più record per lo stesso ISIN da banche diverse
+			CREATE TABLE IF NOT EXISTS bank_position (
+			    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+			    isin VARCHAR(12) NOT NULL,
+			    bank_name VARCHAR(100) NOT NULL, --- Es: 'Intesa', 'Mediolanum'
+			    quantity DECIMAL(19, 4) NOT NULL,
+			    price_reported DECIMAL(19, 4),   --- Step D: Prezzo comunicato dalla banca
+			    report_date DATE NOT NULL,
+			    FOREIGN KEY (isin) REFERENCES security(isin)
+			);
+			
+			--- 5. Log di Riconciliazione Manuale (Step C)
+			--- Permette di "chiudere" una discrepanza con un commento
+			CREATE TABLE IF NOT EXISTS reconciliation_notes (
+			    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+			    isin VARCHAR(12) NOT NULL,
+			    portfolio_id VARCHAR(50) NOT NULL,
+			    is_validated BOOLEAN DEFAULT FALSE,
+			    note TEXT,
+			    validated_by VARCHAR(100),
+			    validation_date TIMESTAMP,
+			    UNIQUE(isin, portfolio_id)
+			);
+    	</sql>
+    </changeSet>
+    
+    
+    <changeSet id="#2 - popolamento dati iniziali" author="lsoldi">
+    	<sql>
+    		--- 1. POPOLAMENTO ANAGRAFICA E PORTAFOGLI
+			INSERT INTO security (isin, name, currency) VALUES 
+			('US0378331005', 'Apple Inc.', 'USD'),
+			('US88160R1014', 'Tesla Inc.', 'USD'),
+			('IT0003132474', 'Eni S.p.A.', 'EUR'),
+			('US0231351067', 'Amazon.com Inc.', 'USD'),
+			('LU1234567890', 'ETF World Index', 'EUR');
+			
+			INSERT INTO portfolio (id, description) VALUES 
+			('PORT-TECH', 'Portafoglio Titoli Growth Tech'),
+			('PORT-CORE', 'Portafoglio Diversificato Core');
+			
+			--- 2. CASO A: POSIZIONE INTERNA SU PIÙ BANCHE (Apple)
+			--- Swarm dice 100 totali. La realtà è divisa: 70 su Intesa, 30 su Mediolanum.
+			INSERT INTO internal_position (isin, portfolio_id, quantity, market_price) 
+			VALUES ('US0378331005', 'PORT-TECH', 100.00, 185.20);
+			
+			INSERT INTO bank_position (isin, bank_name, quantity, price_reported, report_date) VALUES 
+			('US0378331005', 'Intesa Sanpaolo', 70.00, 185.20, CURRENT_DATE),
+			('US0378331005', 'Mediolanum', 30.00, 185.20, CURRENT_DATE);
+			
+			
+			--- 3. CASO B: DISCREPANZA QUANTITÀ (Tesla)
+			--- Swarm dice 50, ma la banca ne riporta 45. (Esempio di errore o operazione non registrata)
+			INSERT INTO internal_position (isin, portfolio_id, quantity, market_price) 
+			VALUES ('US88160R1014', 'PORT-TECH', 50.00, 240.50);
+			
+			INSERT INTO bank_position (isin, bank_name, quantity, price_reported, report_date) 
+			VALUES ('US88160R1014', 'Intesa Sanpaolo', 45.00, 240.50, CURRENT_DATE);
+			
+			
+			--- 4. CASO C: DISCREPANZA PREZZO + NOTA MANUALE (Eni)
+			--- Quantità ok (1000), ma il prezzo differisce (15.20 vs 15.10).
+			--- Inseriamo già una nota di validazione.
+			INSERT INTO internal_position (isin, portfolio_id, quantity, market_price) 
+			VALUES ('IT0003132474', 'PORT-CORE', 1000.00, 15.20);
+			
+			INSERT INTO bank_position (isin, bank_name, quantity, price_reported, report_date) 
+			VALUES ('IT0003132474', 'Intesa Sanpaolo', 1000.00, 15.10, CURRENT_DATE);
+			
+			INSERT INTO reconciliation_notes (isin, portfolio_id, is_validated, note, validated_by, validation_date)
+			VALUES ('IT0003132474', 'PORT-CORE', TRUE, 'Differenza prezzo dovuta a orario di chiusura diverso. Ok.', 'Admin', CURRENT_TIMESTAMP);
+			
+			
+			--- 5. CASO D: TITOLO MANCANTE LATO BANCA (Amazon)
+			--- Presente in Swarm (10), ma nessun report ricevuto dalle banche.
+			INSERT INTO internal_position (isin, portfolio_id, quantity, market_price) 
+			VALUES ('US0231351067', 'PORT-TECH', 10.00, 145.00);
+			
+			
+			--- 6. CASO E: TITOLO MANCANTE LATO INTERNO (ETF World)
+			--- La banca lo segnala (200 quote), ma non è censito su Swarm.
+			INSERT INTO bank_position (isin, bank_name, quantity, price_reported, report_date) 
+			VALUES ('LU1234567890', 'Mediolanum', 200.00, 105.00, CURRENT_DATE);
+    	</sql>
+    </changeSet>
+
+</databaseChangeLog>
