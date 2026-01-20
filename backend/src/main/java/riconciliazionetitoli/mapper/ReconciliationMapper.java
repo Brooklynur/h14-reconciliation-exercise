@@ -7,7 +7,7 @@ import org.apache.ibatis.annotations.Mapper;
 import riconciliazionetitoli.response.ReconciliationResponse;
 
 @Mapper
-public interface RiconciliationMapper {
+public interface ReconciliationMapper {
 
 	List<ReconciliationResponse> getReconciliationReport();
 	

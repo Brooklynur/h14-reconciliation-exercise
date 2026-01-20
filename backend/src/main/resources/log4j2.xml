@@ -39,7 +39,7 @@
       <AppenderRef ref="fileAppender" level="INFO" />
     </Logger>
         
-    <Logger name="com.msa.preventivodinamicotosd.mapper" level="DEBUG" additivity="false">
+    <Logger name="riconciliazionetitoli.mapper" level="DEBUG" additivity="false">
       <AppenderRef ref="fileAppender" level="DEBUG"/>
     </Logger>
       
@@ -47,14 +47,6 @@
     
     <Logger name="org.springframework" level="warn" additivity="false">
       <AppenderRef ref="fileAppender" level="warn"/>
-    </Logger>
-    
-    <Logger name="it.selectsrl" level="info" additivity="false">
-      <AppenderRef ref="fileAppender" level="info"/>
-    </Logger>
-    
-    <Logger name="com.msa" level="info" additivity="false">
-      <AppenderRef ref="fileAppender" level="info"/>
     </Logger>
     
     <Logger name="liquibase" level="INFO" additivity="false">
