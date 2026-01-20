@@ -17,7 +17,7 @@ public class RiconciliazioneController {
 	@Autowired
 	private ReconciliationMapper mapper;
 	
-	@GetMapping
+	@GetMapping("/report")
 	public List<ReconciliationResponse> getData() {
 		return mapper.getReconciliationReport();
 	}
