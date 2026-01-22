@@ -31,8 +31,12 @@
       <AppenderRef ref="fileAppender" level="warn"/>
     </Logger>
       
-    <Logger name="org.hibernate" level="warn" additivity="false">
-      <AppenderRef ref="fileAppender" level="warn"/>
+    <Logger name="org.hibernate" level="TRACE" additivity="false">
+      <AppenderRef ref="fileAppender" level="TRACE"/>
+    </Logger>
+    
+    <Logger name="org.springframework.boot.h2console" level="TRACE" additivity="false">
+      <AppenderRef ref="fileAppender" level="TRACE" />
     </Logger>
     
     <Logger name="org.springframework" level="INFO" additivity="false">

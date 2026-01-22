@@ -26,5 +26,24 @@
       WHERE isin = #{isin}
 		AND portfolio_id = #{portfolioId}
     </update>
+    
+    
+    <insert id="insert" parameterType="riconciliazionetitoli.model.ReconciliationNotesModel">
+		INSERT INTO reconciliation_notes (
+		isin,
+		portfolio_id,
+		is_validated,
+		note,
+		validated_by,
+		validation_date
+		) VALUES (
+		#{isin},
+		#{portfolioId},
+		#{isValidated},
+		#{note},
+		#{validatedBy},
+		#{validationDate}
+		)
+    </insert>
 
 </mapper>

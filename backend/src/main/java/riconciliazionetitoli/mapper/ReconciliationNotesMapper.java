@@ -11,4 +11,6 @@ public interface ReconciliationNotesMapper {
 	
 	void update(ReconciliationNotesModel model);
 	
+	void insert(ReconciliationNotesModel model);
+	
 }

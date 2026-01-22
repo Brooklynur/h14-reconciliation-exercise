@@ -2,9 +2,11 @@ package riconciliazionetitoli.model;
 
 import java.util.Date;
 
+import lombok.NoArgsConstructor;
 import lombok.ToString;
 
 @ToString
+@NoArgsConstructor
 public class ReconciliationNotesModel {
 	
 	private Long id;

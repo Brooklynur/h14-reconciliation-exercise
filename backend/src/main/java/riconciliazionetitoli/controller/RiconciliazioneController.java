@@ -29,6 +29,6 @@ public class RiconciliazioneController {
 
 	@PostMapping("/validate")
 	public void validatePosition(@RequestBody RiconciliazioneManualeRequest request) throws RiconciliazioneTitoliException {
-		riconciliazioneService.updateReconciliation(request);
+		riconciliazioneService.validateReconciliation(request);
 	}
 }

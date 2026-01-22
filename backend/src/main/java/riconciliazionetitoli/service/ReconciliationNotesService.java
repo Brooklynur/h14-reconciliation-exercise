@@ -23,4 +23,9 @@ public class ReconciliationNotesService {
 		reconciliationNotesMapper.update(model);
 	}
 	
+	@Transactional
+	public void insert(ReconciliationNotesModel model) {
+		reconciliationNotesMapper.insert(model);
+	}
+	
 }

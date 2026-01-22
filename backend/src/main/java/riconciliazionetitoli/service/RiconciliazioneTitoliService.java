@@ -1,5 +1,6 @@
 package riconciliazionetitoli.service;
 
+import java.util.Date;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -25,16 +26,16 @@ public class RiconciliazioneTitoliService {
 	}
 	
 	@Transactional
-	public void updateReconciliation(RiconciliazioneManualeRequest request) throws RiconciliazioneTitoliException {
-		ReconciliationNotesModel reconciliationNotesByIsinAndPortfolioId = reconciliationNotesService.getReconciliationNotesByIsinAndPortfolioId(request.getIsin(), request.getPortfolioId());
+	public void validateReconciliation(RiconciliazioneManualeRequest request) throws RiconciliazioneTitoliException {
+		ReconciliationNotesModel model = new ReconciliationNotesModel();
+		model.setIsin(request.getIsin());
+		model.setPortfolioId(request.getPortfolioId());
+		model.setNote(request.getNote());
+		model.setIsValidated(Boolean.TRUE);
+		model.setValidationDate(new Date());
+		model.setValidatedBy(9999999L);
 		
-		if(reconciliationNotesByIsinAndPortfolioId == null) {
-			throw new RiconciliazioneTitoliException("Reconciliation note not found for ISIN: " + request.getIsin() + " and Portfolio ID: " + request.getPortfolioId());
-		}
-		
-		reconciliationNotesByIsinAndPortfolioId.setNote(request.getNote());
-		reconciliationNotesService.update(reconciliationNotesByIsinAndPortfolioId);
-		
+		reconciliationNotesService.insert(model);
 	}
 	
 }
