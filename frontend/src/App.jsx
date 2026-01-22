@@ -13,7 +13,10 @@ function App() {
     try {
       const res = await api.get('/report');
       setData(res.data);
-    } catch (e) { console.error("Errore API", e); }
+    } catch (e) {
+      alert("Errore nel caricamento dei dati. Controlla la console per i dettagli."); 
+      console.error("Errore API", e); 
+    }
     setLoading(false);
   };
 
@@ -22,8 +25,13 @@ function App() {
   const handleValidate = async (row) => {
     const note = window.prompt(`Nota di riconciliazione per ${row.securityName}:`);
     if (note !== null) {
-      await api.post('/validate', { isin: row.isin, portfolioId: row.portfolioId, note });
-      loadData();
+      try {
+        await api.post('/validate', { isin: row.isin, portfolioId: row.portfolioId, note });
+        loadData();
+      } catch (e) {
+        alert("Errore nell'invio della validazione. Controlla la console per i dettagli.");
+        console.error("Errore API", e);
+      }
     }
   };
 

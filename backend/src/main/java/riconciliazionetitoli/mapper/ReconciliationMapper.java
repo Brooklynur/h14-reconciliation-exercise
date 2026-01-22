@@ -11,4 +11,6 @@ public interface ReconciliationMapper {
 
 	List<ReconciliationResponse> getReconciliationReport();
 	
+	void update();
+	
 }
